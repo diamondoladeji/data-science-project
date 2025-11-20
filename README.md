@@ -1,1 +1,1 @@
-# data-science-project
+# This project aims to analyze the DBLP dataset to identify and visualize clusters of research topics and examine how they change over time. Such an analysis could reveal which fields have grown in popularity, which have declined, and how different areas are interrelated.
