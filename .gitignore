@@ -6,5 +6,7 @@ dblp-ref-3.json
 # Virtual Env
 .venv
 
+.idea
+
 # Datasets
 datasets/dblp*.json
