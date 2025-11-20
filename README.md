@@ -64,4 +64,4 @@ http://localhost:8888/?token=...
 ```
 
 Copy and paste it into your web browser to access the Jupyter Notebook then open
-`clustering.ipynb`.
+`project.ipynb`.
