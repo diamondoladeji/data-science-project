@@ -1,3 +1,9 @@
+# Final Data Science Project Created by
+- Diamond Oladeji, PS ID: 2164567
+- Diego Coronado, PS ID: 2303693
+- Olutoba "Toba" Sanyaolu, PS ID: 2135924
+
+
 # DBLP Dataset Final Project
 
 This project aims to analyze the DBLP dataset to identify and visualize clusters
