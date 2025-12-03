@@ -110,27 +110,39 @@ The EDA plots were used to validate that the preprocessing produced a clean well
 === Citation Distribution Plot
 
 #figure(
-  image("./images/eda_citation_distribution.png"),
+  image("./images/eda_citation_distribution.png", width: 65%),
   caption: "Citation Distribution",
 )
+
+The log-scaled histogram of citation counts show a heavy-tailed shape after removing `n_citation = 50`. There were no remaining artificial spikes, and the upper tail decreased smoothly.
 
 === Collaboration Trend Plot
 
 #figure(
-  image("./images/eda_collaboration_trend.png"),
+  image("./images/eda_collaboration_trend.png", width: 65%),
   caption: "Collaboration Trend Plot",
 )
+
+The line plot of the average number of authors per year showed a clear upward trend, confirming that collaboration in computer science has increased over time. This pattern is held consistently from the 1970s through 2018.
 
 === Venue Frequency Plot
 
 #figure(
-  image("./images/eda_top_venues.png"),
+  image("./images/eda_top_venues.png", width: 65%),
   caption: "Venue Frequency Plot",
 )
+
+After removing empty venues, the top-20 venue plot consisted of real recognized conferences and journals. No placeholder or missing values appeared.
 
 === Metadata Correlation Plot
 
 #figure(
-  image("./images/eda_corr_matrix.png"),
+  image("./images/eda_corr_matrix.png", width: 65%),
   caption: "Metadata Correlation Plot",
 )
+
+The correlation heatmap showed reasonable relationships among metadata features, with no signs of duplicated or bad features.
+
+Together these diagnostic plots confirm that the dataset is clean, internally consistent, and suitable for the modeling and trend analysis performed in later sections.
+
+
