@@ -67,9 +67,18 @@ Once the combined text field (title + abstract) was prepared, we transformed eac
 
 This produced a 5,000 dimensional matrix, where each paper is represented by a term of weights. Although TF-IDF preserves important distinctions between documents, the feature space is large and not ideal for clustering or visualization, which motivated the next step.
 
-=== PCA Reduction
+=== Choosing the PCA Dimensionality
 
-To create a more compact representation, we applied Principal Component Analysis (PCA) to the TF-IDF matrix and kept the first 100 components. These components are not meant to be directly interpretable but rather capture a broad topical structure in the dataset in much denser form. The result is a 100 dimensional embedding for each paper. These embeddings would them be easier to cluster, compare, and visualize, and they will form the backbone of the "black-box" features used throughout the rest of the analyses.
+In order to choose an appropriate number of components, we evaluated cluster quality across a range of PCA sizes. For each value in ${50, 75, 100, 125, ..., 300}$, we reduced the TF-IDF matrix to k components and computed the silhouette score after running K-means. The silhouette score consistently decreased as dimensionality increased, and the highest score was obtained at 50 components. Although the silhouette scores and cumulative explained variance values are low this is expected for text datasets since TF-IDF variance is extremely spread out across thousands of components and text datasets also do not form sharply separated clusters.
+
+#figure(
+  image("./images/pca_ncomponent_tradeoff.png", width: 65%),
+  caption: "PCA n_dimension tradeoff",
+)
+
+
+
+
 
 === Venue and Author Embeddings
 
