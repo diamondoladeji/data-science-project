@@ -155,3 +155,51 @@ The correlation heatmap showed reasonable relationships among metadata features,
 Together these diagnostic plots confirm that the dataset is clean, internally consistent, and suitable for the modeling and trend analysis performed in later sections.
 
 
+= Task 2: Topic Clustering
+
+== Overview
+
+The cleaned and feature-engineered dataset from Task 1 was used to identify broad research themes within the DBLP corpus. Because DBLP papers do not come with ground-truth topic labels, we used unsupervised learning to discover natural groupings of papers based on their textual similarity. The analysis followed the pipeline:
+1. TF-IDF vectorization
+2. PCA reduction to 50 components
+3. K-means clustering
+4. Keyword extraction to interpret clusters
+5. PCA and t-SNE visualizations
+
+The pipeline produced eight research topics and revealed one unexpected cluster of non English papers, which we removed before re-fitting the model.
+
+== Selecting the Number of Clusters
+
+We explored several values of k and inspected the resulting keyword sets and cluseter coherence. Although DBLP contains many subfields, we found that using a large number of clusters leads to overly fragmented groups. Through experimentation we found $k = 8$ to be the best value because it offered the best balance as it was enough to capture big fields in Computer Science (like Theory, Systems, and AI) without splitting the data into overly specific niches.
+
+
+== Initial Clustering and Removal of Non-English Papers
+
+
+
+The first run of K-means revealed a small but distinct cluster dominated by German language papers (194 papers). Its top keywords ('der', 'die', 'und', ...) were because considered "noise" in our analysis. Retaining them would introduce irrelevant vocabulary into the feature space and intefere with downstream supervised classification modeling (Task 4), as the model might learn to classify based on language rather than topic. So we removed these papers and re-fitted the entire TF-IDF $arrow.r$ PCA $arrow.r$ K-Means pipeline. This resulted in sharper topic boundaries and more coherent keyword sets in the remaining clusters.
+
+== Final Topic Clusters and Interpretations
+
+After removing the German-language documents, the re-fitted model identified eight clear research themes. We assigned labels to each cluster by examining their top-10 TF-IDF keywords:
+
+- _Logic & Formal Methods:_ ("logic", "symbolic", "semantics", "intuitionistic", "modal")
+- _Numerical Computing:_ ("matrix", "polynomial", "inversion", "equation", "solution")
+- _Algorithms & Theory:_ ("graph", "linear", "finite", "set", "algorithms")
+- _Compilers & Languages:_ ("languages", "grammars", "context-free", "programming")
+- _Coding Theory:_ ("error", "codes", "decoding", "cyclic", "binary")
+- _Information Retrieval:_ ("retrieval", "document", "model", "search", "user")
+- _Systems & Networks:_ ("network", "performance", "models", "control", "traffic")
+- _General / Applied CS":_ ("information", "research", "computer", "design", "software")
+
+These labels serve as the ground truth targers for our predictive modeling tasks.
+
+
+== Visualization with PCA
+
+We visualized the clusters using the first two PCA components.
+
+#figure(
+  image("./images/"),
+  caption: "Topic clusters projected onto the first two PCA components.",
+)
