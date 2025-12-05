@@ -177,7 +177,7 @@ We explored several values of k and inspected the resulting keyword sets and clu
 
 
 
-The first run of K-means revealed a small but distinct cluster dominated by German language papers (194 papers). Its top keywords ('der', 'die', 'und', ...) were because considered "noise" in our analysis. Retaining them would introduce irrelevant vocabulary into the feature space and intefere with downstream supervised classification modeling (Task 4), as the model might learn to classify based on language rather than topic. So we removed these papers and re-fitted the entire TF-IDF $arrow.r$ PCA $arrow.r$ K-Means pipeline. This resulted in sharper topic boundaries and more coherent keyword sets in the remaining clusters.
+The first run of K-means revealed a small but distinct cluster dominated by German language papers (587 + 704 papers). Its top keywords ('der', 'die', 'und', ...) were because considered "noise" in our analysis. Retaining them would introduce irrelevant vocabulary into the feature space and intefere with downstream supervised classification modeling (Task 4), as the model might learn to classify based on language rather than topic. So we removed these papers and re-fitted the entire TF-IDF $arrow.r$ PCA $arrow.r$ K-Means pipeline. This resulted in sharper topic boundaries and more coherent keyword sets in the remaining clusters.
 
 == Final Topic Clusters and Interpretations
 
