@@ -24,40 +24,38 @@ For prototyping, we sampled subsets of 50,000–100,000 papers, while the full p
 
 = Task 1: Data Preprocessing and Feature Generation
 == Data Cleaning
-The four DBLP JSON files were merged into a single dataset before any sampling or feature extraction. Papers missing a title or publication year were removed at the start, since both fields are required for text analysis and for understanding changes in research output over time
+The four DBLP JSON files were merged into a single dataset before any sampling or feature extraction. Papers missing a title or publication year were removed at the start, since both fields are required for text analysis and for understanding changes in research output over time. In later tasks (Task 2: Topic Clustering) we also found distinct clusters of German papers, so we added a filter containing common german words to remove these since they would provide no value in classification modeling.
 
 
 === Venue Filtering and Missing Venue Removal
 
-Because the DBLP dataset included thousand of venues, many of which appear only a handful of times, we first calculated venue frequencies and kept only venues with at least fifty papers. During this step, we discovered that more than 506,699 papers had an empty venue value (`""`). Because this missing entry appeared so frequently, it passed the $gt.eq 50$ threshold and would have shown up as the most common venue, which was not meaningful information.
+Because the DBLP dataset included thousand of venues, many of which appear only a handful of times, we first calculated venue frequencies and kept only venues with at least fifty papers. During this step, we discovered that more than 506,699 papers had an empty venue value (`""`). To correct this, we removed all papers with missing venue metadata before sampling. After this fix, the most frequent venues in the cleaned dataset were recognizable and legitimate publication outlets  confirming that the venue field was now reliable.
 
-To correct this, we removed all papers with missing venue metadata before sampling. After this fix, the most frequent venues in the cleaned dataset were recognizable and legitimate publication outlets such as _Communications of the ACM, Journal of the ACM, and IEEE Transactions on Information Theory_, confirming that the venue field was now reliable.
+#figure(
+  image("./images/eda_top_venues.png", width: 50%),
+  caption: "Venue Frequency Plot",
+)
 
 === Removing a Citation Artifact
 
-When we later plotted the citation distribution using a log-scaled histogram, we observed a large spike at exactly 50 citations, which did not align with the expected heavy tailed distribution that is observed in bibliometric datasets. Because the spike was evidence of a possible data artifact, we removed all papers with `n_citation = 50` before sampling. After this correction, the updated histogram (see 3.6) displayed a smooth decline in the upper tail, with:
+When we later plotted the citation distribution using a log-scaled histogram, we observed a large spike at exactly 50 citations, which did not align with the expected heavy tailed distribution that is observed in bibliometric datasets. Because the spike was evidence of a possible data artifact, we removed all papers with `n_citation = 50` before sampling. After this correction, the updated histogram displayed a smooth decline in the upper tail
 
-- median = 7 citations
-- 75th percentile = 52
-- 95th percentile = 245
-- 99th percentile = 808
-- maximum = 17,064
+#figure(
+  image("./images/eda_citation_distribution.png", width: 50%),
+  caption: "Citation Distribution",
+)
 
-These values match what we expect from large citation datasets.
+The distribution now matches what we expect from large bibliometric datasets.
 
 == Stratified Sampling
 
 After cleaning the venues and removing the citation artifact, we drew a stratified sample from the dataset by selecting up to 2,000 papers per publication year. We sampled per year to prevent the sample from being dominated by modern papers and in order to preserve long-term temporal structure. Sampling was intentionally done after cleaning the dataset, in order to ensure that the sample did not include missing venues or distorted citation values.
 
+
+
 == Text Normalization
 
-After sampling, text fields were normalized:
-
-- missing abstracts were replaced with empty strings
-- titles and abstracts were converted to lowercase for consistent tokenisation
-- a combined text field was created (text = title + " " + abstract)
-
-This combined field served as the input for TF-IDF.
+After sampling, text fields were normalized: missing abstracts were replaced with empty strings, titles and abstracts were converted to lowercase for consistent tokenisation, and a combined text field was created (text = title + " " + abstract). This combined field served as the input for TF-IDF.
 
 == Black-Box Feature Generation
 
@@ -72,13 +70,9 @@ This produced a 5,000 dimensional matrix, where each paper is represented by a t
 In order to choose an appropriate number of components, we evaluated cluster quality across a range of PCA sizes. For each value in ${50, 75, 100, 125, ..., 300}$, we reduced the TF-IDF matrix to k components and computed the silhouette score after running K-means. The silhouette score consistently decreased as dimensionality increased, and the highest score was obtained at 50 components. Although the silhouette scores and cumulative explained variance values are low this is expected for text datasets since TF-IDF variance is extremely spread out across thousands of components and text datasets also do not form sharply separated clusters.
 
 #figure(
-  image("./images/pca_ncomponent_tradeoff.png", width: 65%),
+  image("./images/pca_ncomponent_tradeoff.png", width: 50%),
   caption: "PCA n_dimension tradeoff",
 )
-
-
-
-
 
 === Venue and Author Embeddings
 
@@ -104,102 +98,96 @@ We also generated several interpretable metadata features:
 
 === Metadata Correlation Check
 
-A correlation heatmap (see 3.6) confirmed that these engineered features are not redundant. For example:
+A correlation heatmap confirmed that these engineered features are not redundant as shown below.
+
+#figure(
+  image("./images/eda_corr_matrix.png", width: 50%),
+  caption: "Metadata Correlation Plot",
+)
+
 
 - number of authors increases with year $(r approx 0.48)$
 - number of references also increases with year $(r approx 0.42)$
 - citation velocity is almost perfectly correlated with citation $(r approx 0.90)$
 
-Other relationships were weak, and indicates that the metadata features capture different aspects of each paper.
-
-== Exploratory Validation
-
-The EDA plots were used to validate that the preprocessing produced a clean well-behaved sample:
-
-=== Citation Distribution Plot
-
-#figure(
-  image("./images/eda_citation_distribution.png", width: 65%),
-  caption: "Citation Distribution",
-)
-
-The log-scaled histogram of citation counts show a heavy-tailed shape after removing `n_citation = 50`. There were no remaining artificial spikes, and the upper tail decreased smoothly.
-
-=== Collaboration Trend Plot
-
-#figure(
-  image("./images/eda_collaboration_trend.png", width: 65%),
-  caption: "Collaboration Trend Plot",
-)
-
-The line plot of the average number of authors per year showed a clear upward trend, confirming that collaboration in computer science has increased over time. This pattern is held consistently from the 1970s through 2018.
-
-=== Venue Frequency Plot
-
-#figure(
-  image("./images/eda_top_venues.png", width: 65%),
-  caption: "Venue Frequency Plot",
-)
-
-After removing empty venues, the top-20 venue plot consisted of real recognized conferences and journals. No placeholder or missing values appeared.
-
-=== Metadata Correlation Plot
-
-#figure(
-  image("./images/eda_corr_matrix.png", width: 65%),
-  caption: "Metadata Correlation Plot",
-)
-
-The correlation heatmap showed reasonable relationships among metadata features, with no signs of duplicated or bad features.
-
-Together these diagnostic plots confirm that the dataset is clean, internally consistent, and suitable for the modeling and trend analysis performed in later sections.
+Some relationships were weak, and indicates that the metadata features capture different aspects of each paper.
 
 
 = Task 2: Topic Clustering
 
+
 == Overview
 
-The cleaned and feature-engineered dataset from Task 1 was used to identify broad research themes within the DBLP corpus. Because DBLP papers do not come with ground-truth topic labels, we used unsupervised learning to discover natural groupings of papers based on their textual similarity. The analysis followed the pipeline:
-1. TF-IDF vectorization
-2. PCA reduction to 50 components
-3. K-means clustering
-4. Keyword extraction to interpret clusters
-5. PCA and t-SNE visualizations
+This task focuses on identifying major research themes within the DBLP dataset using unsupervised learning techniques. Because the dataset contains hundreds of thousands of computer science publications, we applied textual feature extraction, dimensionality reduction, clustering, and visualization methods to uncover coherent topical structures. During this process, we also encountered a large, heterogeneous cluster that required hierarchical re-clustering to fully resolve its internal thematic organization.
 
-The pipeline produced eight research topics and revealed one unexpected cluster of non English papers, which we removed before re-fitting the model.
+== Determining an Appropriate Number of Topics
 
-== Selecting the Number of Clusters
+*Silhoutte & Inertia Optimization (k = 6 to 31)*
 
-We explored several values of k and inspected the resulting keyword sets and cluseter coherence. Although DBLP contains many subfields, we found that using a large number of clusters leads to overly fragmented groups. Through experimentation we found $k = 8$ to be the best value because it offered the best balance as it was enough to capture big fields in Computer Science (like Theory, Systems, and AI) without splitting the data into overly specific niches.
+The first step in topic discovery was selecting an appropriate value of $k$ for K-Means. To do this, we ran K-Means for each k from 6 to 31 and computed two metrics.
+1. Inertia - measures compactness of clusters (Elbow Method)
+2. Silhouette Score - measures separation between clusters
 
+Because computing the Silhouette score over the full dataset ($approx 90,000$) is extremely slow, we evaluated it on a random sample of $15,000$ papers.
 
-== Initial Clustering and Removal of Non-English Papers
+The results are shown below:
 
+#figure(image("./images/topic_clustering_optimal_k.png", width:50%), caption: [_K-Means Optimization for $k =6 dash 31$_])
 
+local Silhouette peaks occurred around $k approx 10, 19, 25, 29$. While $k = 29$ achieved the highest score, the resulting clusters were highly fragmented and often mixed unrelated research areas. After computing cluster keywords for the k-values with local peaks and inspected topic coherence manually we found that $k=19$ produced the cleanest, most interpretable, and semantically coherent topics with stable boundaries.
 
-The first run of K-means revealed a small but distinct cluster dominated by German language papers (194 papers). Its top keywords ('der', 'die', 'und', ...) were because considered "noise" in our analysis. Retaining them would introduce irrelevant vocabulary into the feature space and intefere with downstream supervised classification modeling (Task 4), as the model might learn to classify based on language rather than topic. So we removed these papers and re-fitted the entire TF-IDF $arrow.r$ PCA $arrow.r$ K-Means pipeline. This resulted in sharper topic boundaries and more coherent keyword sets in the remaining clusters.
+== Global Topic Interpretation (k = 19)
+After choosing $k = 19$, the final K-Means model was run on the full PCA-reduced dataset (50 components). For each cluster, we extracted the top TF-IDF keywords, which revealed research areas including:
+- Algorithms & Optimization
+- Graph Theory
+- Parallel Computing
+- General CS & Application (the blob)
+- ...
 
-== Final Topic Clusters and Interpretations
-
-After removing the German-language documents, the re-fitted model identified eight clear research themes. We assigned labels to each cluster by examining their top-10 TF-IDF keywords:
-
-- _Logic & Formal Methods:_ ("logic", "symbolic", "semantics", "intuitionistic", "modal")
-- _Numerical Computing:_ ("matrix", "polynomial", "inversion", "equation", "solution")
-- _Algorithms & Theory:_ ("graph", "linear", "finite", "set", "algorithms")
-- _Compilers & Languages:_ ("languages", "grammars", "context-free", "programming")
-- _Coding Theory:_ ("error", "codes", "decoding", "cyclic", "binary")
-- _Information Retrieval:_ ("retrieval", "document", "model", "search", "user")
-- _Systems & Networks:_ ("network", "performance", "models", "control", "traffic")
-- _General / Applied CS":_ ("information", "research", "computer", "design", "software")
-
-These labels serve as the ground truth targers for our predictive modeling tasks.
-
-
-== Visualization with PCA
-
-We visualized the clusters using the first two PCA components.
+However, unlike the other clusters. Cluster 12 contained $34,806$ papers far exceeding all others in size. Its keywords (e.g. _performance, process, used, applications_) indicating that it was not a coherent research field but rather acted as a catch all general CS region overlapping multiple ares. This required refinement.
 
 #figure(
-  image("./images/"),
-  caption: "Topic clusters projected onto the first two PCA components.",
+  image("images/topic_clustering_t-SNE.png", width: 60%),
+  caption:[
+    _t-SNE confirmed this by identifying a single dominant red cluster corresponding to Cluster 12._
+  ]
+)
+
+== Refining the Large "Blob" Cluster
+
+We isolated Cluster 12 and applied K-means again using the same 50-dimensional PCA embedding. We tested $k = 5-15$ and computed silhouette and inertia specifically for this subset.
+
+
+#figure(
+  image("./images/blob_clustering_optimal_k.png", width: 50%),
+  caption:[_Silhouette and inertia curves for re-clustering the $34,806$ general purpose cluster. \ k = 14 provides the optimal subtopic separation_]
+)
+
+This resulted into 14 distinct subtopics.
+
+*Subtopics Identified Within the Blob*
+
+Re-clustering revealed clear, interpretable subfields, including:
+- Logic/Proof & Semantics
+- Type & Recursion Theory
+- Mobile Robotics & Navigation
+- ...
+
+These 14 subtopics were assigned new labels and merged back into the global dataset, replacing the monolithic "General CS & Applications" cluster. This expanded the topic taxonomy from 19 broad clusters to 32 refined research topics.
+
+== Final Topic Visualization After Blob Refinement
+
+
+After applying the refined labels, we regenerated PCA and t-SNE visualizations to show the full, updated topic landscape.
+
+*PCA Visualization (Refined Topics)*
+
+#figure(image("images/topic_clustering_pca_refined.png", width: 60%), caption:[_PCA projection of all papers after refinements. Cluster 12 is now replaced by 14 distinct subtopics, improving interpretability despite PCA's inherent overlap_])
+*t-SNE Visualization (Refined Topics)*
+
+#figure(
+  image("images/topic_clustering_tsne_refined.png", width: 60%),
+  caption:[
+    _t-SNE projection showing strong spatial separation across 32 final research topics, confirming improved thematic structure after blob subdivision _
+  ]
 )
